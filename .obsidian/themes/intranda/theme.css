@@ -1126,19 +1126,28 @@ body:not(.default-font-color) span:not(.cm-highlight).cm-del, .cm-strikethrough 
 }
 
 /* --------- CODE BLOCKS -----------  */
-.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock{
-  padding-left: var(--size-4-4);
+/* NEVER put a vertical margin on a .cm-line.
+   CodeMirror 6 measures every line with getBoundingClientRect(), which ignores
+   margins, so a margin desynchronises the editor's height map from the DOM and
+   clicks/selections land on the wrong line further down the note. Obsidian guards
+   against this with `.cm-content > * { margin: 0 !important }` - don't out-specify
+   that reset. Padding and borders are part of the measured box, so use those. */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock {
   color: var(--code-normal);
   font-size: 0.8em;
 }
-.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock {
-  margin-left: 25px !important;
+/* Indent the block, but not when it sits inside a list: there the line is already
+   positioned by the list indent (same exclusion Obsidian makes). The transparent
+   border replaces the former `margin-left: 25px` and keeps the identical inset. */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock:not(.HyperMD-list-line) {
+  border-inline-start: 25px solid transparent;
+  padding-inline-start: var(--size-4-4);
 }
 .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock-begin {
-  margin-top: 10px !important;
+  padding-top: 10px;
 }
 .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock-end {
-  margin-bottom: 10px !important;
+  padding-bottom: 10px;
 }
 /* --------- // CODE BLOCKS -----------  */
 
@@ -1203,15 +1212,17 @@ img {
 
 .markdown-rendered ul.has-list-bullet{
   list-style-type: '\200B';
-  margin-top: 4px; 
 }
 
 .markdown-source-view.mod-cm6 .cm-formatting-list-ul, .markdown-source-view.mod-cm6 .cm-formatting-list-ol {
   margin-right: 6px;
 }
 
+/* Top-level lists only. With `!important` this also beat Obsidian's
+   `.markdown-rendered ul ul { margin-block-start: 0 }` reset, which pushed every
+   indented (nested) list down by 6px - most visible on a list following a code block. */
 .markdown-rendered ul, .markdown-rendered ol {
-  margin-block-start: 6px !important;
+  margin-block-start: 6px;
 }
 
 body:not(.default-font-color) mark strong, body:not(.default-font-color) mark em {
@@ -1251,15 +1262,21 @@ body:not(.default-font-color) .markdown-preview-view blockquote, body:not(.defau
 /* --------- // QUOTES -----------  */
 
 /* --------- CALLOUTS -----------  */
-.cm-callout > div{
-  margin: -20px 0 !important;
-}
-
+/* In live preview a callout is a block widget. Obsidian zeroes its margin there
+   (`.markdown-source-view.mod-cm6 .callout { margin: 0 }`) because a margin on the
+   inner element escapes the box CodeMirror measures - which used to shift every
+   line below the callout and break click/selection mapping. So: keep the margin
+   unimportant (reading view and PDF export use it) and space the widget itself
+   with padding, which is measured. */
 .callout {
   border: solid 6px;
   border-color: rgba(var(--callout-color), var(--callout-border-opacity));
   border-radius: 0;
-  margin: 2em 1em !important;
+  margin: 2em 1em;
+}
+
+.markdown-source-view.mod-cm6 .cm-callout {
+  padding: 2em 1em;
 }
 
 .callout-title {
